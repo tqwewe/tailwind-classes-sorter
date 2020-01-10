@@ -4,7 +4,6 @@
 	"description": "Sort tailwind classes",
 	"main": "dist/index.js",
 	"author": "Ari Seyhun <ariseyhun@live.com.au>",
-	"private": true,
 	"scripts": {
 		"dev": "ts-node ./src/index.ts",
 		"build": "tsc"
