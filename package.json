@@ -1,22 +1,26 @@
 {
-  "name": "my-package",
-  "version": "0.1.0",
-  "description": "Lorem ipsumnium.",
-  "main": "dist/index.js",
-  "repository": "github.com/sky-foundry/typescript-skelton",
-  "author": "Sky Foundry <info@skyfoundry.agency>",
-  "private": true,
-  "scripts": {
-    "build": "tsc"
-  },
-  "devDependencies": {
-    "prettier": "^1.16.4",
-    "tailwindcss": "^1.0.3",
-    "tslint": "^5.15.0",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.4.3"
-  },
-  "files": [
-    "dist"
-  ]
+	"name": "tailwind-classes-sorter",
+	"version": "0.1.0",
+	"description": "Sort tailwind classes",
+	"main": "dist/index.js",
+	"author": "Ari Seyhun <ariseyhun@live.com.au>",
+	"private": true,
+	"scripts": {
+		"dev": "ts-node ./src/index.ts",
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"prettier": "^1.19.1",
+		"tailwindcss": "^1.1.4",
+		"tslint": "^5.20.1",
+		"tslint-config-prettier": "^1.18.0",
+		"typescript": "^3.4.3"
+	},
+	"files": [
+		"dist"
+	],
+	"dependencies": {
+		"@types/node": "^13.1.6",
+		"ts-node": "^8.6.0"
+	}
 }

@@ -1,21 +1,15 @@
-# TypeScript Skeleton
+# Tailwind Classes Sorter
 
-## Installing
+Usage:
 
-Clone the repository
+```js
+import TWClassesSorter from 'tailwind-classes-sorter'
 
-```bash
-git clone git@github.com:sky-foundry/typescript-skeleton.git
-```
+const twClassesSorter = new TWClassesSorter()
 
-Install dependencies
+const classes = 'z-50 z-10 container text-left md:text-center justify-center'
+const classList = classes.split(' ')
 
-```bash
-yarn install
-```
-
-## Building
-
-```bash
-yarn run build
+const sortedClassList = twClassesSorter.sortClasslist(classList)
+console.log(sortedClassList)
 ```
