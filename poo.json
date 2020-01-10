@@ -1,0 +1,6 @@
+[ 'container',
+  'justify-center',
+  'text-left',
+  'z-10',
+  'z-50',
+  'md:text-center' ]

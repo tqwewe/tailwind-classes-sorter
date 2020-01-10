@@ -1,0 +1,22 @@
+{
+  "name": "my-package",
+  "version": "0.1.0",
+  "description": "Lorem ipsumnium.",
+  "main": "dist/index.js",
+  "repository": "github.com/sky-foundry/typescript-skelton",
+  "author": "Sky Foundry <info@skyfoundry.agency>",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "prettier": "^1.16.4",
+    "tailwindcss": "^1.0.3",
+    "tslint": "^5.15.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.4.3"
+  },
+  "files": [
+    "dist"
+  ]
+}
