@@ -1,25 +1,25 @@
 {
 	"name": "tailwind-classes-sorter",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Sort tailwind classes",
 	"main": "dist/index.js",
 	"author": "Ari Seyhun <ariseyhun@live.com.au>",
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"dev": "ts-node ./src/index.ts",
 		"build": "tsc"
 	},
 	"devDependencies": {
+		"@types/node": "^13.1.6",
 		"prettier": "^1.19.1",
-		"tailwindcss": "^1.1.4",
 		"tslint": "^5.20.1",
 		"tslint-config-prettier": "^1.18.0",
+		"ts-node": "^8.6.0",
 		"typescript": "^3.4.3"
 	},
-	"files": [
-		"dist"
-	],
-	"dependencies": {
-		"@types/node": "^13.1.6",
-		"ts-node": "^8.6.0"
+	"peerDependencies": {
+		"tailwindcss": "^1.1.x"
 	}
 }
