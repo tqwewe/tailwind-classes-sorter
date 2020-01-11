@@ -9,6 +9,32 @@ interface ClassParts {
 }
 
 export default class TWClassesSorter {
+	public static readConfig(path?: string) {
+		let config = null
+
+		if (path === undefined) {
+			path = nodePath.join(process.cwd(), 'tailwind.config.js')
+			try {
+				config = require(path)
+			} catch (err) {
+				config = null
+			}
+			while (config == null) {
+				path = nodePath.join(path, '..', '..', 'tailwind.config.js')
+				try {
+					config = require(path)
+				} catch (err) {
+					config = null
+				}
+				if (path === '/') {
+					throw new Error('could not find tailwind.config.js')
+				}
+			}
+		}
+
+		return require(path)
+	}
+
 	private tailwindInstallPath = nodePath.join(
 		__dirname,
 		'..',
@@ -85,20 +111,6 @@ export default class TWClassesSorter {
 
 			return 0
 		})
-	}
-
-	public static readConfig(path?: string) {
-		if (path == undefined) {
-			path = nodePath.join(process.cwd(), 'tailwind.config.js')
-			while (path == undefined) {
-				path = nodePath.join(path, '..', '..', 'tailwind.config.js')
-				if (path === '/') {
-					throw new Error('could not find tailwind.config.js')
-				}
-			}
-		}
-
-		return require(path)
 	}
 
 	private getAllSelectors() {
