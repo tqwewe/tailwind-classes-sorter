@@ -1,5 +1,5 @@
 declare module 'tailwindcss'
-declare module 'tailwindcss/lib/util/processPlugins' {
+declare module '../../tailwindcss/lib/util/processPlugins' {
 	interface PluginObject {
 		base: any[]
 		components: any[]

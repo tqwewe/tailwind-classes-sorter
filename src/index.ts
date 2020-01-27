@@ -1,7 +1,9 @@
+import defaultConfig from '../../tailwindcss/stubs/defaultConfig.stub.js'
 import fs from 'fs'
 import nodePath from 'path'
 import process from 'process'
-import processPlugins from 'tailwindcss/lib/util/processPlugins'
+import processPlugins from '../../tailwindcss/lib/util/processPlugins'
+import resolveConfig from '../../tailwindcss/lib/util/resolveConfig'
 
 interface ClassParts {
 	classBase: string
@@ -13,22 +15,27 @@ export default class TWClassesSorter {
 		let config = null
 
 		if (path === undefined) {
-			path = nodePath.join(process.cwd(), 'tailwind.config.js')
+			path = nodePath.join(__dirname, '..', '..', '..', 'tailwind.config.js')
 			try {
 				config = require(path)
 			} catch (err) {
 				config = null
 			}
-			while (config == null) {
-				path = nodePath.join(path, '..', '..', 'tailwind.config.js')
-				try {
-					config = require(path)
-				} catch (err) {
-					config = null
+			if (config == null) {
+				for (let i = 0; i < 16; ++i) {
+					path = nodePath.join(path, '..', '..', 'tailwind.config.js')
+					try {
+						config = require(path)
+					} catch (err) {
+						config = null
+					}
+					if (path === '/tailwind.config.js') {
+						break
+					}
 				}
-				if (path === '/') {
-					throw new Error('could not find tailwind.config.js')
-				}
+			}
+			if (config == null) {
+				throw new Error('could not find tailwind.config.js')
 			}
 		}
 
@@ -38,7 +45,7 @@ export default class TWClassesSorter {
 	private tailwindInstallPath = nodePath.join(
 		__dirname,
 		'..',
-		'node_modules',
+		'..',
 		'tailwindcss'
 	)
 	private tailwindPluginsPath = nodePath.join(
@@ -60,7 +67,7 @@ export default class TWClassesSorter {
 			config = TWClassesSorter.readConfig()
 		}
 
-		this.config = config
+		this.config = resolveConfig([config, defaultConfig])
 		this.sortedSelectors = this.getAllSelectors()
 	}
 
@@ -215,10 +222,3 @@ export default class TWClassesSorter {
 		] as string[]
 	}
 }
-
-const twClassesSorter = new TWClassesSorter()
-console.log(
-	twClassesSorter.sortClasslist(
-		'z-50 z-10 container text-left md:text-center justify-center'.split(' ')
-	)
-)
