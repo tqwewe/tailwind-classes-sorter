@@ -17,7 +17,7 @@
 	"main": "./lib/index.js",
 	"types": "./lib/index.d.ts",
 	"files": [
-		"dist"
+		"lib"
 	],
 	"scripts": {
 		"dev": "ts-node ./src/index.ts",
