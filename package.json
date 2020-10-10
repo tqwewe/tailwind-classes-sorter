@@ -3,6 +3,17 @@
 	"version": "0.1.12",
 	"description": "Sort tailwind classes",
 	"author": "Ari Seyhun <ariseyhun@live.com.au>",
+	"homepage": "https://github.com/Acidic9/tailwind-classes-sorter",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Acidic9/tailwind-classes-sorter.git"
+	},
+	"keywords": [
+		"prettier",
+		"tailwindcss",
+		"sort",
+		"order"
+	],
 	"main": "./lib/index.js",
 	"types": "./lib/index.d.ts",
 	"files": [
