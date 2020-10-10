@@ -71,8 +71,17 @@ export default class TWClassesSorter {
 		this.sortedSelectors = this.getAllSelectors()
 	}
 
-	public sortClasslist(classes: string[]): string[] {
-		return classes.sort((a, b) => {
+	/**
+	 * Sorts an array of classes by Tailwind plugins.
+	 * @param classes List of classes to sort
+	 */
+	public sortClasslist(classes: string[] | string): string[] {
+		const classesArray =
+			typeof classes === 'string'
+				? TWClassesSorter.classesFromString(classes)
+				: classes.slice()
+
+		return classesArray.sort((a, b) => {
 			const aParts = this.getClassParts(a)
 			const bParts = this.getClassParts(b)
 
@@ -120,7 +129,14 @@ export default class TWClassesSorter {
 		})
 	}
 
-	private getAllSelectors() {
+	/**
+	 * Returns a class list array from a string of multiple classes.
+	 */
+	public static classesFromString(classes: string): string[] {
+		return classes.split(' ').map(className => className.trim())
+	}
+
+	private getAllSelectors(): string[] {
 		const allComponentSelectors: string[] = []
 		const allUtilitySelectors: string[] = []
 
