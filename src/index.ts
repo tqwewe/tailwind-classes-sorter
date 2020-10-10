@@ -160,6 +160,7 @@ export default class TWClassesSorter {
 
 	/**
 	 * Changes the order classes are sorted by using Tailwind's plugins.
+	 * @param newPluginOrder New plugins order used for sorting classes
 	 */
 	public setPluginOrder(
 		newPluginOrder: string[] | ((defaultOrder: string[]) => string[])
@@ -175,6 +176,7 @@ export default class TWClassesSorter {
 
 	/**
 	 * Returns a class list array from a string of multiple classes.
+	 * @param classes String of classes
 	 */
 	public static classesFromString(classes: string): string[] {
 		return classes.split(' ').map(className => className.trim())
