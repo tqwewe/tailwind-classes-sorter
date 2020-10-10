@@ -3,7 +3,7 @@
 	"version": "0.1.13",
 	"description": "Sort tailwind classes",
 	"author": "Ari Seyhun <ariseyhun@live.com.au>",
-	"homepage": "https://github.com/Acidic9/tailwind-classes-sorter",
+	"homepage": "https://github.com/Acidic9/tailwind-classes-sorter#readme",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Acidic9/tailwind-classes-sorter.git"
