@@ -6,14 +6,10 @@
 		"forceConsistentCasingInFileNames": true,
 		"declaration": true,
 		"module": "commonjs",
-		"outDir": "dist",
+		"outDir": "lib",
 		"moduleResolution": "node",
 		"noImplicitAny": false
 	},
-	"lib": [
-		"es2015"
-	],
-	"include": [
-		"src"
-	]
+	"lib": ["es2015"],
+	"include": ["src"]
 }
