@@ -11,12 +11,15 @@
 		"dev": "ts-node ./src/index.ts",
 		"build": "tsc"
 	},
+	"dependencies": {
+		"find-up": "^5.0.0"
+	},
 	"devDependencies": {
 		"@types/node": "^13.1.6",
 		"prettier": "^1.19.1",
+		"ts-node": "^8.6.0",
 		"tslint": "^5.20.1",
 		"tslint-config-prettier": "^1.18.0",
-		"ts-node": "^8.6.0",
 		"typescript": "^3.4.3"
 	},
 	"peerDependencies": {

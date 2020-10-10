@@ -1,9 +1,6 @@
-import defaultConfig from '../../tailwindcss/stubs/defaultConfig.stub.js'
 import fs from 'fs'
 import nodePath from 'path'
-import process from 'process'
-import processPlugins from '../../tailwindcss/lib/util/processPlugins'
-import resolveConfig from '../../tailwindcss/lib/util/resolveConfig'
+import findUp from 'find-up'
 
 interface ClassParts {
 	classBase: string
@@ -15,7 +12,11 @@ export default class TWClassesSorter {
 		let config = null
 
 		if (path === undefined) {
-			path = nodePath.join(__dirname, '..', '..', '..', 'tailwind.config.js')
+			path = findUp.sync('tailwind.config.js')
+			if (!path) {
+				throw new Error('could not find tailwind.config.js')
+			}
+
 			try {
 				config = require(path)
 			} catch (err) {
@@ -42,32 +43,60 @@ export default class TWClassesSorter {
 		return require(path)
 	}
 
-	private tailwindInstallPath = nodePath.join(
-		__dirname,
-		'..',
-		'..',
-		'tailwindcss'
-	)
-	private tailwindPluginsPath = nodePath.join(
-		this.tailwindInstallPath,
-		'lib',
-		'plugins'
-	)
-	private pluginsOrder = fs
-		.readdirSync(this.tailwindPluginsPath)
-		.filter(fileName => fileName.indexOf('.') !== -1)
-		.map(fileName => fileName.split('.')[0])
-		.sort()
+	private currentPluginsOrder: string[]
+	private defaultPluginsOrder: string[]
 	private sortedSelectors: string[]
 	private sortedMediaQueries = ['sm', 'md', 'lg', 'xl']
 	private config: any
+	private defaultConfig: any
+	private processPlugins: processPlugins
+	private resolveConfig: any
+	private tailwindInstallPath: string
+	private tailwindPluginsPath: string
 
-	constructor(config?: any) {
+	/**
+	 * Creates an instance of TWClassesSorter.
+	 * @param config Tailwind config - defaults to reading the nearest tailwind.config.js file
+	 * @param nodeModulesDir Path to node_modules directory
+	 */
+	constructor(config?: any, nodeModulesDir: string = '../../') {
 		if (config == undefined) {
 			config = TWClassesSorter.readConfig()
 		}
 
-		this.config = resolveConfig([config, defaultConfig])
+		this.defaultConfig = require(nodePath.join(
+			nodeModulesDir,
+			'tailwindcss/stubs/defaultConfig.stub.js'
+		))
+		this.processPlugins = require(nodePath.join(
+			nodeModulesDir,
+			'tailwindcss/lib/util/processPlugins'
+		)).default
+		this.resolveConfig = require(nodePath.join(
+			nodeModulesDir,
+			'tailwindcss/lib/util/resolveConfig'
+		)).default
+
+		this.tailwindInstallPath = nodePath.join(
+			__dirname,
+			'..',
+			'..',
+			'tailwindcss'
+		)
+		this.tailwindPluginsPath = nodePath.join(
+			this.tailwindInstallPath,
+			'lib',
+			'plugins'
+		)
+
+		this.defaultPluginsOrder = fs
+			.readdirSync(this.tailwindPluginsPath)
+			.filter(fileName => fileName.indexOf('.') !== -1)
+			.map(fileName => fileName.split('.')[0])
+			.sort()
+		this.currentPluginsOrder = this.defaultPluginsOrder
+
+		this.config = this.resolveConfig([config, this.defaultConfig])
 		this.sortedSelectors = this.getAllSelectors()
 	}
 
@@ -130,6 +159,21 @@ export default class TWClassesSorter {
 	}
 
 	/**
+	 * Changes the order classes are sorted by using Tailwind's plugins.
+	 */
+	public setPluginOrder(
+		newPluginOrder: string[] | ((defaultOrder: string[]) => string[])
+	) {
+		if (Array.isArray(newPluginOrder)) {
+			this.currentPluginsOrder = newPluginOrder
+		} else {
+			this.currentPluginsOrder = newPluginOrder(
+				this.defaultPluginsOrder.slice()
+			)
+		}
+	}
+
+	/**
 	 * Returns a class list array from a string of multiple classes.
 	 */
 	public static classesFromString(classes: string): string[] {
@@ -140,7 +184,7 @@ export default class TWClassesSorter {
 		const allComponentSelectors: string[] = []
 		const allUtilitySelectors: string[] = []
 
-		this.pluginsOrder.forEach(pluginName => {
+		this.currentPluginsOrder.forEach(pluginName => {
 			const filename = nodePath.join(
 				this.tailwindPluginsPath,
 				`${pluginName}.js`
@@ -151,7 +195,7 @@ export default class TWClassesSorter {
 					? pluginModule()
 					: pluginModule.default()
 
-			const { components, utilities } = processPlugins(
+			const { components, utilities } = this.processPlugins(
 				[pluginDefault],
 				this.config
 			)
@@ -226,7 +270,7 @@ export default class TWClassesSorter {
 		return selectors
 	}
 
-	private getSelectors(styles: any[]) {
+	private getSelectors(styles: any[]): string[] {
 		return [
 			...new Set(
 				styles.reduce((acc, style) => {

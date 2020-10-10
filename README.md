@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/tailwind-classes-sorter.svg)](https://badge.fury.io/js/tailwind-classes-sorter)
+
 # Tailwind Classes Sorter
 
 ## Sort a tailwind classlist by plugin name.
