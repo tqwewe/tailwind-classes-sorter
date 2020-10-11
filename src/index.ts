@@ -192,9 +192,9 @@ export default class TWClassesSorter {
 		if (Array.isArray(newPluginOrder)) {
 			this.currentPluginsOrder = newPluginOrder
 		} else {
-			this.currentPluginsOrder = Array.from(new Set(newPluginOrder(
-				this.defaultPluginsOrder.slice()
-			)))
+			this.currentPluginsOrder = Array.from(
+				new Set(newPluginOrder(this.defaultPluginsOrder.slice()))
+			)
 		}
 		this.sortedSelectors = this.getAllSelectors()
 	}
@@ -290,43 +290,50 @@ export default class TWClassesSorter {
 	}
 
 	private loopObjectForSelectors(obj: StyleNode): string[] {
-			const selectors: string[] = [];
-			switch (obj.type) {
-					case 'rule': {
-							if (obj.selector) {
-									let cleanedValue = obj.selector.trim().split(' ')[0].replace(/\\/g, '');
-									if (cleanedValue.startsWith('.')) {
-											cleanedValue = cleanedValue.substr(1);
-									}
-									selectors.push(cleanedValue);
-							}
-							return selectors;
+		const selectors: string[] = []
+		switch (obj.type) {
+			case 'rule': {
+				if (obj.selector) {
+					let cleanedValue = obj.selector
+						.trim()
+						.split(' ')[0]
+						.replace(/\\/g, '')
+					if (cleanedValue.startsWith('.')) {
+						cleanedValue = cleanedValue.substr(1)
 					}
-					case 'decl':
-							return selectors;
-					case 'atrule': {
-							if (obj.name && obj.name.startsWith('keyframes')) {
-									return selectors;
-							}
-					}
-					default: {
-							if (Array.isArray(obj.nodes)) {
-									selectors.push(...obj.nodes.reduce<string[]>((acc, node) => [...acc, ...this.loopObjectForSelectors(node)], []))
-							}
-							return selectors
-					}
+					selectors.push(cleanedValue)
+				}
+				return selectors
 			}
+			case 'decl':
+				return selectors
+			case 'atrule': {
+				if (obj.name && obj.name.startsWith('keyframes')) {
+					return selectors
+				}
+			}
+			default: {
+				if (Array.isArray(obj.nodes)) {
+					selectors.push(
+						...obj.nodes.reduce<string[]>(
+							(acc, node) => [...acc, ...this.loopObjectForSelectors(node)],
+							[]
+						)
+					)
+				}
+				return selectors
+			}
+		}
 	}
 
 	private getSelectors(styles: any[]): string[] {
 		return [
 			...new Set(
-				styles
-					.reduce<string[]>((acc, style) => {
-						const selectors = this.loopObjectForSelectors(style)
-						acc.push(...selectors)
-						return acc
-					}, [])
+				styles.reduce<string[]>((acc, style) => {
+					const selectors = this.loopObjectForSelectors(style)
+					acc.push(...selectors)
+					return acc
+				}, [])
 			),
 		].sort()
 	}
