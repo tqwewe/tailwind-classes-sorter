@@ -7,35 +7,24 @@ interface ClassParts {
 	mediaQuery: string | false
 }
 
+interface Options {
+	/** Tailwind config */
+	config?: any
+	/** Position of component and utility classes */
+	classesPosition?: TWClassesSorter['classesPosition']
+	/** Position of unknown classes */
+	unknownClassesPosition?: TWClassesSorter['unknownClassesPosition']
+	/** Custom path to node_modules */
+	nodeModulesPath?: string
+}
+
 export default class TWClassesSorter {
 	public static readConfig(path?: string) {
-		let config = null
-
 		if (path === undefined) {
-			path = findUp.sync('tailwind.config.js')
+			path = findUp.sync('tailwind.config.js', {
+				cwd: __dirname,
+			})
 			if (!path) {
-				throw new Error('could not find tailwind.config.js')
-			}
-
-			try {
-				config = require(path)
-			} catch (err) {
-				config = null
-			}
-			if (config == null) {
-				for (let i = 0; i < 16; ++i) {
-					path = nodePath.join(path, '..', '..', 'tailwind.config.js')
-					try {
-						config = require(path)
-					} catch (err) {
-						config = null
-					}
-					if (path === '/tailwind.config.js') {
-						break
-					}
-				}
-			}
-			if (config == null) {
 				throw new Error('could not find tailwind.config.js')
 			}
 		}
@@ -43,6 +32,8 @@ export default class TWClassesSorter {
 		return require(path)
 	}
 
+	public classesPosition: 'components-first' | 'components-last' | 'as-is'
+	public unknownClassesPosition: 'start' | 'end'
 	private currentPluginsOrder: string[]
 	private defaultPluginsOrder: string[]
 	private sortedSelectors: string[]
@@ -56,33 +47,37 @@ export default class TWClassesSorter {
 
 	/**
 	 * Creates an instance of TWClassesSorter.
-	 * @param config Tailwind config - defaults to reading the nearest tailwind.config.js file
-	 * @param nodeModulesDir Path to node_modules directory
 	 */
-	constructor(config?: any, nodeModulesDir: string = '../../') {
-		if (config == undefined) {
-			config = TWClassesSorter.readConfig()
+	constructor(opts: Options = {}) {
+		if (opts.config == undefined) {
+			opts.config = TWClassesSorter.readConfig()
 		}
 
-		this.defaultConfig = require(nodePath.join(
-			nodeModulesDir,
-			'tailwindcss/stubs/defaultConfig.stub.js'
-		))
-		this.processPlugins = require(nodePath.join(
-			nodeModulesDir,
-			'tailwindcss/lib/util/processPlugins'
-		)).default
-		this.resolveConfig = require(nodePath.join(
-			nodeModulesDir,
-			'tailwindcss/lib/util/resolveConfig'
-		)).default
+		this.classesPosition = opts.classesPosition || 'components-first'
+		this.unknownClassesPosition = opts.unknownClassesPosition || 'start'
+
+		if (!opts.nodeModulesPath) {
+			opts.nodeModulesPath = nodePath.resolve(process.cwd(), 'node_modules')
+		}
 
 		this.tailwindInstallPath = nodePath.join(
-			__dirname,
-			'..',
-			'..',
+			opts.nodeModulesPath,
 			'tailwindcss'
 		)
+
+		this.defaultConfig = require(nodePath.join(
+			this.tailwindInstallPath,
+			'stubs/defaultConfig.stub.js'
+		))
+		this.processPlugins = require(nodePath.join(
+			this.tailwindInstallPath,
+			'lib/util/processPlugins'
+		)).default
+		this.resolveConfig = require(nodePath.join(
+			this.tailwindInstallPath,
+			'lib/util/resolveConfig'
+		)).default
+
 		this.tailwindPluginsPath = nodePath.join(
 			this.tailwindInstallPath,
 			'lib',
@@ -96,8 +91,12 @@ export default class TWClassesSorter {
 			.sort()
 		this.currentPluginsOrder = this.defaultPluginsOrder
 
-		this.config = this.resolveConfig([config, this.defaultConfig])
+		this.config = this.resolveConfig([opts.config, this.defaultConfig])
 		this.sortedSelectors = this.getAllSelectors()
+	}
+
+	public get pluginsOrder() {
+		return this.currentPluginsOrder.slice()
 	}
 
 	/**
@@ -114,6 +113,9 @@ export default class TWClassesSorter {
 			const aParts = this.getClassParts(a)
 			const bParts = this.getClassParts(b)
 
+			const aClassBaseIndex = this.sortedSelectors.indexOf(aParts.classBase)
+			const bClassBaseIndex = this.sortedSelectors.indexOf(bParts.classBase)
+
 			const aHasMediaQuery =
 				Boolean(aParts.mediaQuery) &&
 				this.sortedMediaQueries.indexOf(String(aParts.mediaQuery)) !== -1
@@ -121,6 +123,24 @@ export default class TWClassesSorter {
 				Boolean(bParts.mediaQuery) &&
 				this.sortedMediaQueries.indexOf(String(bParts.mediaQuery)) !== -1
 
+			const aMediaQueryIndex = this.sortedMediaQueries.indexOf(
+				String(aParts.mediaQuery)
+			)
+			const bMediaQueryIndex = this.sortedMediaQueries.indexOf(
+				String(bParts.mediaQuery)
+			)
+
+			// A or B have unknown selector
+			if (aClassBaseIndex !== -1 && bClassBaseIndex === -1) {
+				// B has unknown class
+				return this.unknownClassesPosition === 'start' ? 1 : -1
+			}
+			if (aClassBaseIndex === -1 && bClassBaseIndex !== -1) {
+				// A has unknown class
+				return this.unknownClassesPosition === 'start' ? -1 : 1
+			}
+
+			// Sort by media query
 			if (!aHasMediaQuery && bHasMediaQuery) {
 				return -1
 			}
@@ -128,30 +148,27 @@ export default class TWClassesSorter {
 				return 1
 			}
 
-			if (
-				this.sortedMediaQueries.indexOf(String(aParts.mediaQuery)) <
-				this.sortedMediaQueries.indexOf(String(bParts.mediaQuery))
-			) {
-				return -1
-			}
-			if (
-				this.sortedMediaQueries.indexOf(String(aParts.mediaQuery)) >
-				this.sortedMediaQueries.indexOf(String(bParts.mediaQuery))
-			) {
-				return 1
+			// Both or none have MQ at this point
+			if (aHasMediaQuery && bHasMediaQuery) {
+				if (aMediaQueryIndex < bMediaQueryIndex) {
+					return -1
+				}
+				if (
+					this.sortedMediaQueries.indexOf(String(aParts.mediaQuery)) >
+					this.sortedMediaQueries.indexOf(String(bParts.mediaQuery))
+				) {
+					return 1
+				}
 			}
 
-			if (
-				this.sortedSelectors.indexOf(aParts.classBase) <
-				this.sortedSelectors.indexOf(bParts.classBase)
-			) {
-				return -1
-			}
-			if (
-				this.sortedSelectors.indexOf(aParts.classBase) >
-				this.sortedSelectors.indexOf(bParts.classBase)
-			) {
-				return 1
+			// Sort based on sorted selector
+			if (aClassBaseIndex !== -1 && bClassBaseIndex !== -1) {
+				if (aClassBaseIndex < bClassBaseIndex) {
+					return -1
+				}
+				if (aClassBaseIndex > bClassBaseIndex) {
+					return 1
+				}
 			}
 
 			return 0
@@ -172,6 +189,7 @@ export default class TWClassesSorter {
 				this.defaultPluginsOrder.slice()
 			)
 		}
+		this.sortedSelectors = this.getAllSelectors()
 	}
 
 	/**
@@ -179,10 +197,14 @@ export default class TWClassesSorter {
 	 * @param classes String of classes
 	 */
 	public static classesFromString(classes: string): string[] {
-		return classes.split(' ').map(className => className.trim())
+		return classes
+			.split(' ')
+			.map(className => className.trim())
+			.filter(Boolean)
 	}
 
 	private getAllSelectors(): string[] {
+		const allSelectors: string[] = []
 		const allComponentSelectors: string[] = []
 		const allUtilitySelectors: string[] = []
 
@@ -205,13 +227,31 @@ export default class TWClassesSorter {
 			const componentSelectors = this.getSelectors(components)
 			const utilitiySelectors = this.getSelectors(utilities)
 
-			allComponentSelectors.push(...componentSelectors)
-			allUtilitySelectors.push(...utilitiySelectors)
+			switch (this.classesPosition) {
+				case 'as-is':
+					allSelectors.push(
+						...[...componentSelectors, ...utilitiySelectors].sort()
+					)
+					break
+
+				case 'components-first':
+				case 'components-last':
+					allComponentSelectors.push(...componentSelectors)
+					allUtilitySelectors.push(...utilitiySelectors)
+					break
+			}
 		})
 
-		const allSelectors = [...allComponentSelectors, ...allUtilitySelectors]
+		switch (this.classesPosition) {
+			case 'as-is':
+				return allSelectors
 
-		return allSelectors
+			case 'components-first':
+				return [...allComponentSelectors, ...allUtilitySelectors]
+
+			case 'components-last':
+				return [...allUtilitySelectors, ...allComponentSelectors]
+		}
 	}
 
 	private getClassParts(className: string): ClassParts {
@@ -275,12 +315,14 @@ export default class TWClassesSorter {
 	private getSelectors(styles: any[]): string[] {
 		return [
 			...new Set(
-				styles.reduce((acc, style) => {
-					const selectors = this.loopObjectForSelectors(style)
-					acc.push(...selectors)
-					return acc
-				}, [])
+				styles
+					.reduce<string[]>((acc, style) => {
+						const selectors = this.loopObjectForSelectors(style)
+						acc.push(...selectors)
+						return acc
+					}, [])
+					.sort()
 			),
-		] as string[]
+		]
 	}
 }
