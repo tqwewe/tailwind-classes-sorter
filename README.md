@@ -2,7 +2,7 @@
 
 # Tailwind Classes Sorter
 
-## Sort a tailwind classlist by plugin name.
+Sort tailwind classes in order of default plugins.
 
 **Go from this:**
 
@@ -16,7 +16,7 @@ z-50 z-10 container text-left md:text-center justify-center
 container justify-center text-left z-10 z-50 md:text-center
 ```
 
-Usage:
+Example usage:
 
 ```js
 import TWClassesSorter from 'tailwind-classes-sorter'
@@ -29,6 +29,100 @@ const sortedClassList = twClassesSorter.sortClasslist(classes)
 
 console.log(sortedClassList)
 // container justify-center text-left z-10 z-50 md:text-center
+```
+
+---
+
+## API
+
+**Constructor**
+
+```ts
+constructor(opts: {
+  /** Tailwind config */
+  config?: any
+  /** Position of component and utility classes */
+  classesPosition?: 'components-first' | 'components-last' | 'as-is'
+  /** Position of unknown classes */
+  unknownClassesPosition?: 'start' | 'end'
+  /** Custom path to node_modules */
+  nodeModulesPath?: string
+}): TWClassesSorter
+```
+
+---
+
+**Public Properties**
+
+```ts
+pluginsOrder: string[]
+classesPosition: 'components-first' | 'components-last' | 'as-is'
+unknownClassesPosition: 'start' | 'end'
+```
+
+---
+
+**sortClassList**
+
+```ts
+/**
+ * Sorts an array of classes by Tailwind plugins.
+ * @param classes List of classes to sort
+ */
+sortClasslist(classes: string[] | string): string[]
+```
+
+*Example*
+
+```ts
+const twClassesSorter = new TWClassesSorter()
+twClassesSorter.sortClassList('z-50 z-10 container text-left md:text-center justify-center')
+// Result: ['container', 'justify-center', 'text-left', 'z-10', z-50', 'md:text-center']
+```
+
+---
+
+**setPluginOrder**
+
+```ts
+/**
+ * Changes the order classes are sorted by using Tailwind's plugins.
+ * @param newPluginOrder New plugins order used for sorting classes
+ */
+public setPluginOrder(
+  newPluginOrder: string[] | ((defaultOrder: string[]) => string[])
+): void
+```
+
+*Example*
+
+```ts
+const twClassesSorter = new TWClassesSorter()
+twClassesSorter.setPluginsOrder(defaultPlugins => [
+  'position',
+  'inset',
+  ...defaultPlugins
+])
+```
+
+---
+
+**classesFromString**
+
+```ts
+/**
+ * Returns a class list array from a string of multiple classes.
+ * @param classes String of classes
+ * @static
+ */
+static classesFromString(classes: string): string[]
+```
+
+*Example*
+
+```ts
+TWClassesSorter.classesFromString('w-full absolute top-0')
+// Result: ['w-full', 'absolute', 'top-0']
 ```
 
 ---
