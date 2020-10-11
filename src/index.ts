@@ -2,11 +2,6 @@ import fs from 'fs'
 import nodePath from 'path'
 import findUp from 'find-up'
 
-interface ClassParts {
-	classBase: string
-	mediaQuery: string | false
-}
-
 interface Options {
 	/** Tailwind config */
 	config?: any
@@ -16,6 +11,18 @@ interface Options {
 	unknownClassesPosition?: TWClassesSorter['unknownClassesPosition']
 	/** Custom path to node_modules */
 	nodeModulesPath?: string
+}
+
+interface ClassParts {
+	classBase: string
+	mediaQuery: string | false
+}
+
+interface StyleNode {
+	type: string
+	name?: string
+	nodes?: StyleNode[]
+	selector?: string
 }
 
 export default class TWClassesSorter {
@@ -181,13 +188,13 @@ export default class TWClassesSorter {
 	 */
 	public setPluginOrder(
 		newPluginOrder: string[] | ((defaultOrder: string[]) => string[])
-	) {
+	): void {
 		if (Array.isArray(newPluginOrder)) {
 			this.currentPluginsOrder = newPluginOrder
 		} else {
-			this.currentPluginsOrder = newPluginOrder(
+			this.currentPluginsOrder = Array.from(new Set(newPluginOrder(
 				this.defaultPluginsOrder.slice()
-			)
+			)))
 		}
 		this.sortedSelectors = this.getAllSelectors()
 	}
@@ -195,6 +202,7 @@ export default class TWClassesSorter {
 	/**
 	 * Returns a class list array from a string of multiple classes.
 	 * @param classes String of classes
+	 * @static
 	 */
 	public static classesFromString(classes: string): string[] {
 		return classes
@@ -213,7 +221,12 @@ export default class TWClassesSorter {
 				this.tailwindPluginsPath,
 				`${pluginName}.js`
 			)
-			const pluginModule = require(filename)
+			let pluginModule: any
+			try {
+				pluginModule = require(filename)
+			} catch (err) {
+				return
+			}
 			const pluginDefault =
 				typeof pluginModule === 'function'
 					? pluginModule()
@@ -276,40 +289,33 @@ export default class TWClassesSorter {
 		}
 	}
 
-	private loopObjectForSelectors(obj: any, objRefs: object[] = []): string[] {
-		const selectors: string[] = []
-
-		Object.keys(obj).forEach(key => {
-			const value: any = obj[key]
-			if (key === 'selector') {
-				let cleanedValue: string = value.trim()
-				if (cleanedValue.startsWith('.')) {
-					cleanedValue = cleanedValue.substr(1)
-				}
-				selectors.push(cleanedValue)
-				return
-			}
-
-			if (value instanceof Array) {
-				value.forEach(item => {
-					if (typeof item === 'object') {
-						if (objRefs.findIndex(ref => ref === value) === -1) {
-							objRefs.push(value)
-							selectors.push(...this.loopObjectForSelectors(value, objRefs))
-							return
-						}
+	private loopObjectForSelectors(obj: StyleNode): string[] {
+			const selectors: string[] = [];
+			switch (obj.type) {
+					case 'rule': {
+							if (obj.selector) {
+									let cleanedValue = obj.selector.trim().split(' ')[0].replace(/\\/g, '');
+									if (cleanedValue.startsWith('.')) {
+											cleanedValue = cleanedValue.substr(1);
+									}
+									selectors.push(cleanedValue);
+							}
+							return selectors;
 					}
-				})
-			} else if (typeof value === 'object') {
-				if (objRefs.findIndex(ref => ref === value) === -1) {
-					objRefs.push(value)
-					selectors.push(...this.loopObjectForSelectors(value, objRefs))
-					return
-				}
+					case 'decl':
+							return selectors;
+					case 'atrule': {
+							if (obj.name && obj.name.startsWith('keyframes')) {
+									return selectors;
+							}
+					}
+					default: {
+							if (Array.isArray(obj.nodes)) {
+									selectors.push(...obj.nodes.reduce<string[]>((acc, node) => [...acc, ...this.loopObjectForSelectors(node)], []))
+							}
+							return selectors
+					}
 			}
-		})
-
-		return selectors
 	}
 
 	private getSelectors(styles: any[]): string[] {
@@ -321,8 +327,7 @@ export default class TWClassesSorter {
 						acc.push(...selectors)
 						return acc
 					}, [])
-					.sort()
 			),
-		]
+		].sort()
 	}
 }
