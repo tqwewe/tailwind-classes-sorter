@@ -91,11 +91,21 @@ export default class TWClassesSorter {
 			'plugins'
 		)
 
-		this.defaultPluginsOrder = fs
-			.readdirSync(this.tailwindPluginsPath)
-			.filter(fileName => fileName.indexOf('.') !== -1)
-			.map(fileName => fileName.split('.')[0])
-			.sort()
+		try {
+			this.defaultPluginsOrder = Object.keys(
+				require(nodePath.join(this.tailwindPluginsPath, 'index'))
+			)
+			if (this.defaultPluginsOrder.length === 0) {
+				throw 1
+			}
+		} catch (err) {
+			this.defaultPluginsOrder = fs
+				.readdirSync(this.tailwindPluginsPath)
+				.filter(fileName => fileName.indexOf('.') !== -1)
+				.map(fileName => fileName.split('.')[0])
+				.filter(plugin => plugin !== 'index')
+				.sort()
+		}
 		this.currentPluginsOrder = this.defaultPluginsOrder
 
 		this.config = this.resolveConfig([opts.config, this.defaultConfig])
