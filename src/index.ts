@@ -32,7 +32,7 @@ export default class TWClassesSorter {
 				cwd: __dirname,
 			})
 			if (!path) {
-				throw new Error('could not find tailwind.config.js')
+				return null
 			}
 		}
 
@@ -110,7 +110,7 @@ export default class TWClassesSorter {
 		}
 		this.currentPluginsOrder = this.defaultPluginsOrder
 
-		this.config = this.resolveConfig([opts.config, this.defaultConfig])
+		this.config = this.resolveConfig([opts.config || {}, this.defaultConfig])
 		this.sortedSelectors = this.getAllSelectors()
 	}
 
@@ -209,6 +209,24 @@ export default class TWClassesSorter {
 			)
 		}
 		this.sortedSelectors = this.getAllSelectors()
+	}
+
+	/**
+	 * Changes the tailwind config.
+	 * @param config New config path or object (or null to try to find tailwind.config.js)
+	 */
+	public setConfig(config?: string | any) {
+		let newConfig: any
+
+		if (config == undefined) {
+			newConfig = TWClassesSorter.readConfig()
+		} else if (typeof config === 'string') {
+			newConfig = TWClassesSorter.readConfig(config)
+		} else {
+			newConfig = config
+		}
+
+		this.config = this.resolveConfig([newConfig || {}, this.defaultConfig])
 	}
 
 	/**
