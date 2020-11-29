@@ -246,44 +246,48 @@ export default class TWClassesSorter {
 		const allComponentSelectors: string[] = []
 		const allUtilitySelectors: string[] = []
 
-		this.currentPluginsOrder.forEach(pluginName => {
-			const filename = nodePath.join(
-				this.tailwindPluginsPath,
-				`${pluginName}.js`
+		this.currentPluginsOrder
+			.filter(pluginName =>
+				this.config.corePlugins.some(corePlugin => corePlugin === pluginName)
 			)
-			let pluginModule: any
-			try {
-				pluginModule = require(filename)
-			} catch (err) {
-				return
-			}
-			const pluginDefault =
-				typeof pluginModule === 'function'
-					? pluginModule()
-					: pluginModule.default()
+			.forEach(pluginName => {
+				const filename = nodePath.join(
+					this.tailwindPluginsPath,
+					`${pluginName}.js`
+				)
+				let pluginModule: any
+				try {
+					pluginModule = require(filename)
+				} catch (err) {
+					return
+				}
+				const pluginDefault =
+					typeof pluginModule === 'function'
+						? pluginModule()
+						: pluginModule.default()
 
-			const { components, utilities } = this.processPlugins(
-				[pluginDefault],
-				this.config
-			)
+				const { components, utilities } = this.processPlugins(
+					[pluginDefault],
+					this.config
+				)
 
-			const componentSelectors = this.getSelectors(components)
-			const utilitiySelectors = this.getSelectors(utilities)
+				const componentSelectors = this.getSelectors(components)
+				const utilitiySelectors = this.getSelectors(utilities)
 
-			switch (this.classesPosition) {
-				case 'as-is':
-					allSelectors.push(
-						...[...componentSelectors, ...utilitiySelectors].sort()
-					)
-					break
+				switch (this.classesPosition) {
+					case 'as-is':
+						allSelectors.push(
+							...[...componentSelectors, ...utilitiySelectors].sort()
+						)
+						break
 
-				case 'components-first':
-				case 'components-last':
-					allComponentSelectors.push(...componentSelectors)
-					allUtilitySelectors.push(...utilitiySelectors)
-					break
-			}
-		})
+					case 'components-first':
+					case 'components-last':
+						allComponentSelectors.push(...componentSelectors)
+						allUtilitySelectors.push(...utilitiySelectors)
+						break
+				}
+			})
 
 		switch (this.classesPosition) {
 			case 'as-is':
