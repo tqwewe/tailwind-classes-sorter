@@ -3,8 +3,8 @@ import nodePath from 'path'
 import findUp from 'find-up'
 
 interface Options {
-	/** Tailwind config */
-	config?: any
+	/** Tailwind config path or object */
+	config?: any | string
 	/** Position of component and utility classes */
 	classesPosition?: TWClassesSorter['classesPosition']
 	/** Position of unknown classes */
@@ -58,6 +58,8 @@ export default class TWClassesSorter {
 	constructor(opts: Options = {}) {
 		if (opts.config == undefined) {
 			opts.config = TWClassesSorter.readConfig()
+		} else if (typeof opts.config === 'string') {
+			opts.config = TWClassesSorter.readConfig(opts.config)
 		}
 
 		this.classesPosition = opts.classesPosition || 'components-first'

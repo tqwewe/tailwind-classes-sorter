@@ -39,8 +39,8 @@ console.log(sortedClassList)
 
 ```ts
 constructor(opts: {
-  /** Tailwind config */
-  config?: any
+  /** Tailwind config path or object */
+  config?: any | string
   /** Position of component and utility classes */
   classesPosition?: 'components-first' | 'components-last' | 'as-is'
   /** Position of unknown classes */
@@ -72,11 +72,13 @@ unknownClassesPosition: 'start' | 'end'
 sortClasslist(classes: string[] | string): string[]
 ```
 
-*Example*
+_Example_
 
 ```ts
 const twClassesSorter = new TWClassesSorter()
-twClassesSorter.sortClassList('z-50 z-10 container text-left md:text-center justify-center')
+twClassesSorter.sortClassList(
+	'z-50 z-10 container text-left md:text-center justify-center'
+)
 // Result: ['container', 'justify-center', 'text-left', 'z-10', z-50', 'md:text-center']
 ```
 
@@ -94,14 +96,14 @@ public setPluginOrder(
 ): void
 ```
 
-*Example*
+_Example_
 
 ```ts
 const twClassesSorter = new TWClassesSorter()
 twClassesSorter.setPluginsOrder(defaultPlugins => [
-  'position',
-  'inset',
-  ...defaultPlugins
+	'position',
+	'inset',
+	...defaultPlugins,
 ])
 ```
 
@@ -118,7 +120,7 @@ twClassesSorter.setPluginsOrder(defaultPlugins => [
 static classesFromString(classes: string): string[]
 ```
 
-*Example*
+_Example_
 
 ```ts
 TWClassesSorter.classesFromString('w-full absolute top-0')
