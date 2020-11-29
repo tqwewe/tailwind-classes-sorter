@@ -109,6 +109,18 @@ twClassesSorter.setPluginsOrder(defaultPlugins => [
 
 ---
 
+**setConfig**
+
+```ts
+/**
+ * Changes the tailwind config.
+ * @param config New config path or object (or null to try to find tailwind.config.js)
+ */
+public setConfig(config?: string | any): void
+```
+
+---
+
 **classesFromString**
 
 ```ts
